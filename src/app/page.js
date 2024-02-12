@@ -1,113 +1,186 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import useLocalStorageState from "use-local-storage-state";
+import useSound from "use-sound";
+import Modal from "./components/Modal";
+import ChooseLevel from "./components/ChooseLevel";
+import ActiveGame from "./components/ActiveGame";
+import WinAlert from "./components/WinAlert";
+import TimeOut from "./components/TimeOut";
 
 export default function Home() {
+  const [gameStatus, setGameStatus] = useLocalStorageState("gameStatus", {
+    defaultValue: "chooseLevel",
+  });
+  const [pairs, setPairs] = useLocalStorageState("pairs", { defaultValue: 0 });
+  const [cards, setCards] = useLocalStorageState("cards", { defaultValue: [] });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [timer, setTimer] = useLocalStorageState("timer", { defaultValue: 0 });
+  const [moves, setMoves] = useLocalStorageState("moves", { defaultValue: 0 });
+  const [playClickSound] = useSound("/sounds/click.mp3");
+  const [playSuccessSound] = useSound("/sounds/success.mp3");
+  const [playFanfareSound] = useSound("/sounds/fanfare.mp3");
+  const [soundOn, setSoundOn] = useLocalStorageState("soundOn", {
+    defaultValue: true,
+  }); // generates a new set of cards for the memory game
+
+  function shuffleCards(number) {
+    const newCards = [];
+    for (let i = 1; i <= number; i++) {
+      newCards.push({
+        id: i, // every image exists two times to make up a pair
+        image: `/cats/image${Math.ceil(i / 2)}.jpg`,
+        flipped: false,
+        visible: true,
+      });
+    } // shuffles the cards with the Fisher-Yates algorithm
+    for (let i = newCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newCards[i], newCards[j]] = [newCards[j], newCards[i]];
+    }
+    setCards(newCards);
+  } // compares two flipped cards
+
+  function compareCards(selectedCard) {
+    const flippedCards = cards.filter((card) => card.flipped); // this happens when one card is flipped
+    if (flippedCards.length < 2) {
+      if (soundOn) {
+        playClickSound();
+      }
+      selectedCard.flipped = true;
+      setCards([...cards]);
+    } // this happens when a second card is flipped
+    if (flippedCards.length === 1 && flippedCards[0].id != selectedCard.id) {
+      // this happens if the two cards match
+      if (flippedCards[0].image === selectedCard.image) {
+        setTimeout(() => {
+          if (soundOn) {
+            playSuccessSound();
+          }
+          setPairs(pairs + 1);
+          setMoves(moves + 1);
+          selectedCard.visible = false;
+          flippedCards[0].visible = false;
+          flippedCards[0].flipped = false;
+          selectedCard.flipped = false;
+          setCards([...cards]);
+        }, 300);
+      } // this happens if the two cards don't match
+      else {
+        if (soundOn) {
+          playClickSound();
+        }
+        setTimeout(() => {
+          setMoves(moves + 1);
+          flippedCards[0].flipped = false;
+          selectedCard.flipped = false;
+          setCards([...cards]);
+        }, 1000);
+      }
+    }
+  } // checks whether any visible cards are left and triggers the win alert if there aren't
+
+  useEffect(() => {
+    const visibleCards = cards.filter((card) => card.visible === true);
+    if (cards.length != 0 && visibleCards.length === 0) {
+      setTimeout(() => {
+        setGameStatus("winAlert");
+        if (soundOn) {
+          playFanfareSound();
+        }
+      }, 300);
+    }
+  }, [cards, setGameStatus, soundOn, playFanfareSound]); // starts a new game with the specified number of cards
+
+  function startGame(numberOfCards) {
+    if (soundOn) {
+      playClickSound();
+    }
+    setGameStatus("activeGame");
+    shuffleCards(numberOfCards);
+  } // restarts the game in the event of a win, a timeout or manual closure
+
+  function restartGame(win) {
+    if (soundOn) {
+      playClickSound();
+    }
+    setGameStatus("chooseLevel");
+    cards.forEach((card) => (card.visible = true));
+    setCards([...cards]);
+    setPairs(0);
+    setModalOpen(false);
+    setTimer(0);
+    setMoves(0);
+  } // opens and closes the modal for manual closure
+
+  function toggleModal() {
+    if (soundOn) {
+      playClickSound();
+    }
+    setModalOpen(!modalOpen);
+  } // sets up a timer that increments every second while the game is running
+
+  useEffect(() => {
+    let interval;
+    if (gameStatus === "activeGame") {
+      interval = setInterval(() => {
+        // if the timer runs for 1 hour the game will be stopped automatically
+        if (timer >= 3599) {
+          clearInterval(interval);
+          setGameStatus("timeOut");
+        } else {
+          setTimer((prevTimer) => prevTimer + 1);
+        }
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [gameStatus, timer, setGameStatus, setTimer]); // formats the time to enhance user readability
+
+  const formattedTime = `${Math.floor(timer / 60)}:${(timer % 60)
+    .toString()
+    .padStart(2, "0")}`; // switches sound effects on and off
+
+  function toggleSound() {
+    if (!soundOn) {
+      playClickSound();
+    }
+    setSoundOn(!soundOn);
+  } // defines the size of each memory card depending on the number of cards
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <main>
+      {/* modal for manual closure */}
+      {modalOpen === true ? (
+        <Modal toggleModal={toggleModal} restartGame={restartGame} />
+      ) : null}
+      {/* displays a screen where the user can choose a level */}
+      {gameStatus === "chooseLevel" ? (
+        <ChooseLevel startGame={startGame} />
+      ) : /* displays the active game */
+      gameStatus === "activeGame" ? (
+        <ActiveGame
+          toggleSound={toggleSound}
+          toggleModal={toggleModal}
+          compareCards={compareCards}
+          cards={cards}
+          formattedTime={formattedTime}
+          moves={moves}
+          pairs={pairs}
+          soundOn={soundOn}
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      ) : /* displays user stat, animation and restart button when user wins the game */
+      gameStatus === "winAlert" ? (
+        <WinAlert
+          formattedTime={formattedTime}
+          moves={moves}
+          restartGame={restartGame}
+        />
+      ) : (
+        /* displays error message and restart button if the time for a game expires */
+        <TimeOut restartGame={restartGame} />
+      )}
     </main>
   );
 }
