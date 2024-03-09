@@ -17,7 +17,7 @@ export default function ChooseLevel({ startGame }) {
       <p>Choose your level</p>
       <Button
         buttonFunction={startGame}
-        functionValue={8}
+        functionValue={10}
         darkColor="#7f1d1d"
         lightColor="#ef4444"
         flareColor="#fecaca"
@@ -25,7 +25,7 @@ export default function ChooseLevel({ startGame }) {
       />
       <Button
         buttonFunction={startGame}
-        functionValue={16}
+        functionValue={20}
         darkColor="#713f12"
         lightColor="#eab308"
         flareColor="#fef08a"
@@ -33,7 +33,7 @@ export default function ChooseLevel({ startGame }) {
       />
       <Button
         buttonFunction={startGame}
-        functionValue={24}
+        functionValue={30}
         darkColor="#831843"
         lightColor="#f43f5e"
         flareColor="#fecdd3"

@@ -1,6 +1,6 @@
 export default function Modal({ toggleModal, restartGame }) {
   return (
-    <div className="w-[100%] min-[400px]:w-[400px] min-[400px]:left-[50%] min-[400px]:-translate-x-1/2 h-full bg-[rgba(0,0,0,0.5)] absolute top-0 left-0 z-30">
+    <div className="w-[100%] min-[450px]:w-[450px] min-[450px]:left-[50%] min-[450px]:-translate-x-1/2 h-full bg-[rgba(0,0,0,0.5)] absolute top-0 left-0 z-30">
       <div className="bg-white w-[90%] py-[1rem] px-[0.6rem] rounded-[0.4rem] text-center absolute top-[50%] -translate-y-1/2 left-[50%] -translate-x-1/2 z-40">
         <p>Are you sure you want to quit? Your progress will be lost.</p>
         <div className="flex justify-center gap-[0.8rem] mt-[1.2rem]">
