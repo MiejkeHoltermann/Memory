@@ -44,9 +44,9 @@ main {
   gap: 1rem;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 400px) {
   main {
-    width: 480px;
+    width: 400px;
   }
 }
 
