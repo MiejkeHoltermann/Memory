@@ -64,27 +64,29 @@ export default function ActiveGame({
       </div>
       {/*  Playing field */}
       <div className="relative w-[90%] max-w-[18rem] flex flex-wrap">
-        {cards.map((card) => (
-          <button
-            key={card.id}
-            onClick={() => compareCards(card)}
-            visible={card.visible}
-            flipped={card.flipped}
-            image={card.image}
-            style={{
-              backgroundImage:
-                card.visible && !card.flipped
-                  ? `url("/cover.svg")`
-                  : card.visible && card.flipped
-                  ? `url("${card.image}")`
-                  : "",
-              borderWidth: card.visible && !card.flipped ? "0.15rem" : "",
-              boxShadow: card.visible ? "2px 2px 4px rgba(0,0,0,0.3)" : "",
-              width: `${cardSize}`,
-            }}
-            className={`aspect-square hover:border-[var(--rose)] rounded-[0.4rem] bg-cover flex justify-center items-center m-[0.5%]`}
-          />
-        ))}
+        {cards.map((card) =>
+          card.image ? (
+            <button
+              key={card.id}
+              onClick={() => compareCards(card)}
+              visible={card.visible}
+              flipped={card.flipped}
+              image={card.image}
+              style={{
+                backgroundImage:
+                  card.visible && !card.flipped
+                    ? `url("/cover.svg")`
+                    : card.visible && card.flipped
+                    ? `url("${card.image}")`
+                    : "",
+                borderWidth: card.visible && !card.flipped ? "0.15rem" : "",
+                boxShadow: card.visible ? "2px 2px 4px rgba(0,0,0,0.3)" : "",
+                width: `${cardSize}`,
+              }}
+              className={`aspect-square hover:border-[var(--rose)] rounded-[0.4rem] bg-cover flex justify-center items-center m-[0.5%]`}
+            />
+          ) : null
+        )}
       </div>
       {/*  User stats */}
       <p className="text-[#4b2b1a] font-bold text-xl w-[7.6rem] h-[2.4rem] rounded-l-3xl flex items-center gap-[0.6rem] bg-yellow-300 absolute right-0 bottom-[1.2rem] shadow-[2px_2px_4px_rgba(0,0,0,0.3)]">
