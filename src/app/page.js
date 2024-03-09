@@ -30,7 +30,7 @@ export default function Home() {
       newCards.push({
         id: i, // every image exists two times to make up a pair
         image: `/cats/image${Math.ceil(i / 2)}.jpg`,
-        flipped: false,
+        flipped: null,
         visible: true,
       });
     } // shuffles the cards with the Fisher-Yates algorithm
