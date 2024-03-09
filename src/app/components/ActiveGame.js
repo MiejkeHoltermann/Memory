@@ -74,9 +74,9 @@ export default function ActiveGame({
               image={card.image}
               style={{
                 backgroundImage:
-                  card.visible && !card.flipped
+                  card.visible === true && card.flipped !== true
                     ? `url("/cover.svg")`
-                    : card.visible && card.flipped
+                    : card.visible === true && card.flipped === true
                     ? `url("${card.image}")`
                     : "",
                 borderWidth: card.visible && !card.flipped ? "0.15rem" : "",
